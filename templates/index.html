@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="ide">
+
+  <!-- SIDEBAR: file explorer -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <span class="dot dot--red"></span><span class="dot dot--amber"></span><span class="dot dot--green"></span>
+    </div>
+    <div class="sidebar__project">FARIA-NAFEES <span class="sidebar__project-sub">/ portfolio</span></div>
+    <nav class="filetree">
+      <a href="#about" class="filetree__item" data-target="about"><span class="filetree__icon">🐍</span>about.py</a>
+      <a href="#skills" class="filetree__item" data-target="skills"><span class="filetree__icon">🧩</span>skills.json</a>
+      <a href="#experience" class="filetree__item" data-target="experience"><span class="filetree__icon">💼</span>experience.py</a>
+      <a href="#projects" class="filetree__item" data-target="projects"><span class="filetree__icon">📁</span>projects/</a>
+      <a href="#education" class="filetree__item" data-target="education"><span class="filetree__icon">🎓</span>education.md</a>
+      <a href="#contact" class="filetree__item" data-target="contact"><span class="filetree__icon">✉️</span>contact.py</a>
+    </nav>
+    <div class="sidebar__foot">
+      <a href="{{ profile.github }}" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="{{ profile.linkedin }}" target="_blank" rel="noopener">LinkedIn ↗</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- tab bar -->
+    <div class="tabbar">
+      <div class="tab tab--active" data-tab="about">about.py</div>
+      <div class="tab" data-tab="skills">skills.json</div>
+      <div class="tab" data-tab="experience">experience.py</div>
+      <div class="tab" data-tab="projects">projects/</div>
+      <div class="tab" data-tab="education">education.md</div>
+      <div class="tab" data-tab="contact">contact.py</div>
+    </div>
+
+    <div class="editor">
+
+      <!-- ABOUT / HERO -->
+      <section id="about" class="pane pane--hero">
+        <pre class="code-block code-block--hero"><code><span class="tok-key">class</span> <span class="tok-class">Developer</span>:
+    <span class="tok-key">def</span> <span class="tok-fn">__init__</span>(<span class="tok-var">self</span>):
+        <span class="tok-var">self</span>.name = <span class="tok-str">"{{ profile.name }}"</span>
+        <span class="tok-var">self</span>.role = <span class="tok-str">"{{ profile.title }}"</span>
+        <span class="tok-var">self</span>.base = <span class="tok-str">"{{ profile.location }}"</span>
+        <span class="tok-var">self</span>.status = <span class="tok-str">"open_to_work"</span> <span class="tok-comment"># hiring me = good idea</span></code></pre>
+
+        <h1 class="hero__name">{{ profile.name }}</h1>
+        <p class="hero__title">{{ profile.title }}</p>
+        <p class="hero__summary">{{ profile.summary }}</p>
+
+        <div class="hero__meta">
+          <span>{{ profile.location }}</span>
+          <span class="meta-sep">·</span>
+          <a href="tel:{{ profile.phone }}">{{ profile.phone }}</a>
+          <span class="meta-sep">·</span>
+          <a href="mailto:{{ profile.email }}">{{ profile.email }}</a>
+        </div>
+
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="#projects">See the work</a>
+          <a class="btn btn--ghost" href="#contact">Hire me</a>
+        </div>
+      </section>
+
+      <!-- SKILLS -->
+      <section id="skills" class="pane">
+        <h2 class="pane__title">skills.json</h2>
+        <p class="pane__intro">A working snapshot of what I build with — updated as I learn.</p>
+        <div class="skills-grid">
+          {% for group, items in skills.items() %}
+          <div class="skill-card">
+            <h3 class="skill-card__group">{{ group }}</h3>
+            <ul class="skill-card__list">
+              {% for item in items %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- EXPERIENCE -->
+      <section id="experience" class="pane">
+        <h2 class="pane__title">experience.py</h2>
+        <p class="pane__intro">Client work, internship, and current role — in order.</p>
+        <div class="timeline">
+          {% for job in experience %}
+          <div class="timeline__row">
+            <div class="timeline__period">{{ job.period }}</div>
+            <div class="timeline__line"><span class="timeline__node"></span></div>
+            <div class="timeline__body">
+              <h3 class="timeline__role">{{ job.role }}</h3>
+              <p class="timeline__place">{{ job.place }}</p>
+              <ul class="timeline__points">
+                {% for p in job.points %}<li>{{ p }}</li>{% endfor %}
+              </ul>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- PROJECTS -->
+      <section id="projects" class="pane">
+        <h2 class="pane__title">projects/</h2>
+        <p class="pane__intro">Independent builds, from full-stack apps to Python fundamentals.</p>
+        <div class="projects-grid">
+          {% for proj in projects %}
+          <article class="project-card {% if proj.kind == 'featured' %}project-card--featured{% endif %}">
+            <div class="project-card__head">
+              <h3>{{ proj.name }}</h3>
+            </div>
+            <p class="project-card__desc">{{ proj.description }}</p>
+            <div class="project-card__stack">
+              {% for s in proj.stack %}<span class="chip">{{ s }}</span>{% endfor %}
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- EDUCATION + CERTS -->
+      <section id="education" class="pane">
+        <h2 class="pane__title">education.md</h2>
+        <div class="edu-grid">
+          {% for e in education %}
+          <div class="edu-card">
+            <h3>{{ e.degree }}</h3>
+            <p class="edu-card__school">{{ e.school }}</p>
+            <p class="edu-card__meta">{{ e.period }} · {{ e.detail }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        <h3 class="pane__subtitle">Certifications</h3>
+        <ul class="cert-list">
+          {% for c in certifications %}<li>{{ c }}</li>{% endfor %}
+        </ul>
+      </section>
+
+      <!-- CONTACT -->
+      <section id="contact" class="pane pane--contact">
+        <h2 class="pane__title">contact.py</h2>
+        <p class="pane__intro">Say hello, or send a brief. I reply by email.</p>
+
+        <form id="contact-form" class="contact-form">
+          <label>
+            <span>name</span>
+            <input type="text" name="name" required>
+          </label>
+          <label>
+            <span>email</span>
+            <input type="email" name="email" required>
+          </label>
+          <label>
+            <span>message</span>
+            <textarea name="message" rows="5" required></textarea>
+          </label>
+          <button type="submit" class="btn btn--primary">Send message</button>
+          <p class="contact-form__status" id="contact-status" role="status"></p>
+        </form>
+
+        <div class="contact-direct">
+          <a href="mailto:{{ profile.email }}">{{ profile.email }}</a>
+          <a href="{{ profile.linkedin }}" target="_blank" rel="noopener">linkedin.com/in/faria-nafees</a>
+          <a href="{{ profile.github }}" target="_blank" rel="noopener">github.com/Faria3</a>
+        </div>
+      </section>
+
+      <footer class="footer">© {{ year }} {{ profile.name }} — built with Flask &amp; Python.</footer>
+
+    </div>
+  </main>
+</div>
+{% endblock %}
