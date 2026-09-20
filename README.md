@@ -39,19 +39,71 @@ of `app.py` (`PROFILE`, `SKILLS`, `EXPERIENCE`, `PROJECTS`, `EDUCATION`,
 `CERTIFICATIONS`). Change the values there; the template updates
 automatically.
 
-## The contact form
+## The contact form — now emails you
 
-`POST /api/contact` currently validates the submission and logs it to
-the server console — it does **not** send you an email yet, because
-free hosts don't include an email service by default. Two easy ways to
-make it real:
+`POST /api/contact` validates the submission, logs it to the server
+console, **and emails it to you** via SMTP (using only Python's
+built-in `smtplib` — no extra dependency). If email isn't configured
+yet, it just logs and still shows the visitor a normal success message
+— nothing breaks, you just won't get the email until you set this up.
 
-- **Formspree / Web3Forms** (no backend changes): point the form's
-  `fetch` call in `static/js/script.js` at your Formspree/Web3Forms
-  endpoint instead of `/api/contact`.
-- **SMTP from Flask**: install `Flask-Mail`, add your Gmail/Outlook
-  SMTP credentials as environment variables (never hard-code them),
-  and send the message inside `api_contact()` in `app.py`.
+### Set it up with Gmail (free, ~5 minutes)
+
+1. Turn on 2-Step Verification on the Gmail account you want to send
+   from: myaccount.google.com/security.
+2. Create an **App Password**: myaccount.google.com/apppasswords →
+   name it "portfolio" → copy the 16-character password it gives you.
+   (This is *not* your normal Gmail password — Google blocks normal
+   passwords for this.)
+3. Set three environment variables wherever you run the app:
+
+   | Variable | Value |
+   |---|---|
+   | `SMTP_USER` | the Gmail address you're sending **from** |
+   | `SMTP_PASSWORD` | the 16-character app password from step 2 |
+   | `CONTACT_RECEIVER` | the address you want messages sent **to** (can be the same Gmail, or `farianafees803@gmail.com`) |
+
+   **Running locally (PowerShell):**
+   ```powershell
+   $env:SMTP_USER="youraddress@gmail.com"
+   $env:SMTP_PASSWORD="your16charapppassword"
+   $env:CONTACT_RECEIVER="farianafees803@gmail.com"
+   python app.py
+   ```
+   (These only last for that terminal session — set them again next
+   time, or use a `.env` file with `python-dotenv` if you want them to
+   persist.)
+
+   **On PythonAnywhere:** open your WSGI configuration file and add
+   these three lines *before* the `from app import app as application`
+   line:
+   ```python
+   os.environ['SMTP_USER'] = 'youraddress@gmail.com'
+   os.environ['SMTP_PASSWORD'] = 'your16charapppassword'
+   os.environ['CONTACT_RECEIVER'] = 'farianafees803@gmail.com'
+   ```
+   (add `import os` near the top if it's not already there), then
+   Save and Reload.
+
+   **On Render:** dashboard → your service → **Environment** tab → add
+   the three variables there. Render keeps them secret and out of your
+   GitHub repo automatically.
+
+4. Test it: submit the contact form on your live site and check the
+   inbox at `CONTACT_RECEIVER`.
+
+⚠️ Never commit real credentials into `app.py` or push them to GitHub.
+Environment variables keep them out of your repo entirely — that's
+the whole reason `app.py` reads them with `os.environ.get(...)`
+instead of having them typed in directly.
+
+### Alternative: Formspree / Web3Forms
+
+If you'd rather not deal with SMTP at all, a hosted form service works
+too — point the `fetch()` call in `static/js/script.js` at your
+Formspree/Web3Forms endpoint instead of `/api/contact`. Less setup,
+but your submissions live on a third party's service instead of
+going straight to your inbox.
 
 ## Deploying for free
 

@@ -1,3 +1,19 @@
+// Scroll progress bar — fills across the top as the page is read
+(function () {
+  const bar = document.getElementById("scroll-progress");
+  if (!bar) return;
+
+  function update() {
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
+    bar.style.width = progress + "%";
+  }
+
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
+  update();
+})();
+
 // Scrollspy: highlight the active file/tab as the user scrolls through sections
 (function () {
   const sections = Array.from(document.querySelectorAll(".pane[id]"));
@@ -22,6 +38,42 @@
   }
 })();
 
+// One orchestrated page-load moment: the hero "class Developer" block types itself out.
+// Runs once, respects reduced-motion preferences, and never re-triggers on scroll.
+(function () {
+  const block = document.getElementById("hero-code");
+  if (!block) return;
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReducedMotion) return;
+
+  const codeEl = block.querySelector("code");
+  const full = codeEl.innerHTML;
+  const plain = codeEl.textContent;
+
+  // Type out plain text quickly, then swap in the syntax-highlighted markup —
+  // gives the typing feel without re-parsing HTML character by character.
+  codeEl.textContent = "";
+  block.classList.add("is-typing");
+
+  let i = 0;
+  const total = plain.length;
+  const durationMs = 650; // fast, deliberate — not a slow gimmick
+  const stepMs = Math.max(4, durationMs / total);
+
+  function tick() {
+    i += Math.max(1, Math.round(total / (durationMs / stepMs)));
+    if (i >= total) {
+      codeEl.innerHTML = full;
+      block.classList.remove("is-typing");
+      return;
+    }
+    codeEl.textContent = plain.slice(0, i);
+    setTimeout(tick, stepMs);
+  }
+  setTimeout(tick, 150);
+})();
+
 // Contact form: POST to /api/contact, show inline status
 (function () {
   const form = document.getElementById("contact-form");
@@ -36,6 +88,7 @@
     submitBtn.disabled = true;
     status.textContent = "Sending…";
     status.classList.remove("is-error");
+    status.classList.add("is-visible");
 
     try {
       const res = await fetch("/api/contact", {

@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 
+<div class="scroll-progress" id="scroll-progress"></div>
+
 <div class="ide">
 
   <!-- SIDEBAR: file explorer -->
@@ -40,12 +42,19 @@
 
       <!-- ABOUT / HERO -->
       <section id="about" class="pane pane--hero">
-        <pre class="code-block code-block--hero"><code><span class="tok-key">class</span> <span class="tok-class">Developer</span>:
+        <div class="hero__glow" aria-hidden="true"></div>
+
+        <div class="hero__top">
+          <div class="avatar" aria-hidden="true">FN</div>
+          <span class="status-pill"><span class="status-pill__dot"></span>Open to work</span>
+        </div>
+
+        <pre class="code-block code-block--hero" id="hero-code"><code><span class="tok-key">class</span> <span class="tok-class">Developer</span>:
     <span class="tok-key">def</span> <span class="tok-fn">__init__</span>(<span class="tok-var">self</span>):
         <span class="tok-var">self</span>.name = <span class="tok-str">"{{ profile.name }}"</span>
         <span class="tok-var">self</span>.role = <span class="tok-str">"{{ profile.title }}"</span>
         <span class="tok-var">self</span>.base = <span class="tok-str">"{{ profile.location }}"</span>
-        <span class="tok-var">self</span>.status = <span class="tok-str">"open_to_work"</span> <span class="tok-comment"># hiring me = good idea</span></code></pre>
+        <span class="tok-var">self</span>.status = <span class="tok-str">"open_to_work"</span> <span class="tok-comment"># hiring me = good idea</span></code><span class="code-cursor"></span></pre>
 
         <h1 class="hero__name">{{ profile.name }}</h1>
         <p class="hero__title">{{ profile.title }}</p>
@@ -111,6 +120,7 @@
           <article class="project-card {% if proj.kind == 'featured' %}project-card--featured{% endif %}">
             <div class="project-card__head">
               <h3>{{ proj.name }}</h3>
+              {% if proj.kind == 'featured' %}<span class="project-card__badge">Featured</span>{% endif %}
             </div>
             <p class="project-card__desc">{{ proj.description }}</p>
             <div class="project-card__stack">

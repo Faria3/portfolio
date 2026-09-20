@@ -1,14 +1,23 @@
 """
 Faria Nafees — Portfolio
-A small Flask app that serves a one-page developer portfolio and a
-lightweight JSON API describing the same content (because a Python
-portfolio should have at least one working endpoint).
+A small Flask app that serves a one-page developer portfolio, a
+lightweight JSON API describing the same content, and a contact
+endpoint that emails you when someone submits the form.
 """
 
+import os
+import smtplib
+import ssl
 from datetime import datetime
+from email.message import EmailMessage
+
 from flask import Flask, render_template, jsonify, request
 
 app = Flask(__name__)
+
+# ----------------------------------------------------------------------
+# Content — edit these to update the site
+# ----------------------------------------------------------------------
 
 PROFILE = {
     "name": "Faria Nafees",
@@ -114,6 +123,56 @@ CERTIFICATIONS = [
     "Python Intermediate — Udemy",
 ]
 
+# ----------------------------------------------------------------------
+# Email — reads credentials from environment variables, never hard-coded.
+# See README.md for how to set these on your machine / host.
+# ----------------------------------------------------------------------
+
+SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER")            # the email account that sends the message
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")    # an app password, not your normal login password
+CONTACT_RECEIVER = os.environ.get("CONTACT_RECEIVER", PROFILE["email"])
+
+
+def send_contact_email(name: str, email: str, message: str) -> bool:
+    """
+    Sends the contact-form submission to CONTACT_RECEIVER by email.
+    Returns True on success, False if email isn't configured or sending
+    failed (in which case the submission is still logged server-side).
+    """
+    if not SMTP_USER or not SMTP_PASSWORD:
+        print("[contact] Email not configured — set SMTP_USER / SMTP_PASSWORD. Logging only.")
+        return False
+
+    msg = EmailMessage()
+    msg["Subject"] = f"Portfolio contact — {name}"
+    msg["From"] = SMTP_USER
+    msg["To"] = CONTACT_RECEIVER
+    msg["Reply-To"] = email
+    msg.set_content(
+        f"New message from your portfolio site:\n\n"
+        f"Name: {name}\n"
+        f"Email: {email}\n\n"
+        f"Message:\n{message}\n"
+    )
+
+    try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls(context=context)
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.send_message(msg)
+        return True
+    except Exception as exc:  # noqa: BLE001 — we want to log and degrade gracefully either way
+        print(f"[contact] Email send failed: {exc}")
+        return False
+
+
+# ----------------------------------------------------------------------
+# Routes
+# ----------------------------------------------------------------------
+
 
 @app.route("/")
 def home():
@@ -146,11 +205,7 @@ def api_profile():
 
 @app.route("/api/contact", methods=["POST"])
 def api_contact():
-    """
-    Receives the contact form. On a free host with no database/email
-    service configured, we just validate and echo back a confirmation —
-    swap this for a real email send (see README) once you add one.
-    """
+    """Validates the contact form, emails it to CONTACT_RECEIVER, and logs it either way."""
     data = request.get_json(silent=True) or {}
     name = (data.get("name") or "").strip()
     email = (data.get("email") or "").strip()
@@ -160,6 +215,8 @@ def api_contact():
         return jsonify({"ok": False, "error": "Please fill in name, email, and message."}), 400
 
     print(f"[contact] {datetime.now().isoformat()} — {name} <{email}>: {message}")
+    send_contact_email(name, email, message)
+
     return jsonify({"ok": True, "message": "Thanks — message received. I'll reply by email soon."})
 
 
